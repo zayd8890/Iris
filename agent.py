@@ -1,5 +1,5 @@
-from calculator import CalculatorTool
 from smolagents import CodeAgent, LiteLLMModel
+from tools.fan_control import FanControlTool
 import contextlib
 import io
 
@@ -15,7 +15,7 @@ class AgentManager:
             temperature=temperature,
             api_key=api_key
         )
-        self.tools = tools or [CalculatorTool()]
+        self.tools = tools or [FanControlTool()]
         self.verbose = verbose
         self.agent = CodeAgent(tools=self.tools, model=self.model)
 

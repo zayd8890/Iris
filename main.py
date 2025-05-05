@@ -4,7 +4,9 @@ import soundfile as sf
 from audio2text import transcribe_audio
 from agent import AgentManager  
 from text2audio import speak_text
-from calculator import CalculatorTool
+from tools.light_control import LightControlTool
+from tools.fan_control import FanControlTool
+from tools.thermostat_control import ThermostatControlTool
 import toml
 
 config = toml.load('config.toml')
@@ -53,7 +55,7 @@ def main():
         model_id="deepseek/deepseek-chat",  # Can change model here
         temperature=0.7,  # Adjust creativity parameter
         api_key=DEEPSEEK_API,
-        tools=[CalculatorTool()]
+        tools=[FanControlTool(),ThermostatControlTool(),LightControlTool()]
     )
     
     record_audio()
