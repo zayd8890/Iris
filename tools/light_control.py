@@ -1,23 +1,30 @@
 from smolagents import Tool
+import RPi.GPIO as GPIO
 
 class LightControlTool(Tool):
     name = "light_control"
-    description = "Controls the state of a smart light (on or off)."
+    description = "Contrôle une lumière via un relais connecté au GPIO."
     inputs = {
         "action": {
             "type": "string",
-            "description": "Action to perform on the light. Can be 'on' or 'off'."
+            "description": "Action à effectuer sur la lumière. Peut être 'on' ou 'off'."
         }
     }
     output_type = "string"
 
+    def __init__(self):
+        self.relay_pin = 17  # GPIO utilisé pour le relais
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.relay_pin, GPIO.OUT)
+        GPIO.output(self.relay_pin, GPIO.HIGH)  # lumière éteinte au démarrage
+
     def forward(self, action: str) -> str:
         action = action.lower()
         if action == 'on':
-            print("I turned on the light.")
-            return "Light turned on."
+            GPIO.output(self.relay_pin, GPIO.LOW)
+            return "Lumière allumée."
         elif action == 'off':
-            print("I turned off the light.")
-            return "Light turned off."
+            GPIO.output(self.relay_pin, GPIO.HIGH)
+            return "Lumière éteinte."
         else:
-            return "Error: Invalid action. Please use 'on' or 'off'."
+            return "Erreur : action invalide. Utilisez 'on' ou 'off'."
