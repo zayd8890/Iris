@@ -4,5 +4,9 @@ pyttsx3                  # pyttsx3 for offline text-to-speech
 sounddevice              # For recording audio
 soundfile                # For saving recorded audio
 numpy                    # For handling audio data
-requests                 # For making API calls to DeepSeek
 speechrecognition        # Optional: If you want to use speech recognition
+contextlib
+io
+toml
+RPi.GPIO
+rpi.gpio
