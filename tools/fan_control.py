@@ -1,8 +1,9 @@
 from smolagents import Tool
+import requests
 
 class FanControlTool(Tool):
     name = "fan_control"
-    description = "Controls the state of a smart fan (on or off)."
+    description = "Controls the state of a smart fan (on or off) via OpenHAB REST API."
     inputs = {
         "action": {
             "type": "string",
@@ -13,11 +14,20 @@ class FanControlTool(Tool):
 
     def forward(self, action: str) -> str:
         action = action.lower()
-        if action == 'on':
-            print("I turned on the fan.")
-            return "Fan turned on."
-        elif action == 'off':
-            print("I turned off the fan.")
-            return "Fan turned off."
-        else:
+        if action not in ['on', 'off']:
             return "Error: Invalid action. Please use 'on' or 'off'."
+
+        url = "http://192.168.188.80:8080/rest/items/Ventilateur"
+        try:
+            response = requests.post(
+                url,
+                headers={"Content-Type": "text/plain"},
+                data=action.upper(),
+                timeout=5
+            )
+            if response.status_code == 202:
+                return f"Fan turned {action}."
+            else:
+                return f"Failed to turn {action} the fan. Status code: {response.status_code}"
+        except requests.RequestException as e:
+            return f"Error: {e}"

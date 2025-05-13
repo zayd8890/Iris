@@ -1,30 +1,33 @@
 from smolagents import Tool
-import RPi.GPIO as GPIO
+import requests
 
 class LightControlTool(Tool):
     name = "light_control"
-    description = "Contrôle une lumière via un relais connecté au GPIO."
+    description = "Controls the state of a smart light (on or off) via OpenHAB REST API."
     inputs = {
         "action": {
             "type": "string",
-            "description": "Action à effectuer sur la lumière. Peut être 'on' ou 'off'."
+            "description": "Action to perform on the light. Can be 'on' or 'off'."
         }
     }
     output_type = "string"
 
-    def __init__(self):
-        self.relay_pin = 17  # GPIO utilisé pour le relais
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.relay_pin, GPIO.OUT)
-        GPIO.output(self.relay_pin, GPIO.HIGH)  # lumière éteinte au démarrage
-
     def forward(self, action: str) -> str:
         action = action.lower()
-        if action == 'on':
-            GPIO.output(self.relay_pin, GPIO.LOW)
-            return "Lumière allumée."
-        elif action == 'off':
-            GPIO.output(self.relay_pin, GPIO.HIGH)
-            return "Lumière éteinte."
-        else:
-            return "Erreur : action invalide. Utilisez 'on' ou 'off'."
+        if action not in ['on', 'off']:
+            return "Error: Invalid action. Please use 'on' or 'off'."
+
+        url = "http://192.168.188.80:8080/rest/items/Lampe"
+        try:
+            response = requests.post(
+                url,
+                headers={"Content-Type": "text/plain"},
+                data=action.upper(),
+                timeout=5
+            )
+            if response.status_code == 202:
+                return f"Light turned {action}."
+            else:
+                return f"Failed to turn {action} the light. Status code: {response.status_code}"
+        except requests.RequestException as e:
+            return f"Error: {e}"
