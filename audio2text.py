@@ -2,7 +2,7 @@
 import whisper
 
 # Load Whisper model once (you can cache or load outside for efficiency)
-model = whisper.load_model("small")
+model = whisper.load_model("tiny")
 
 def transcribe_audio(file_path: str) -> str:
     """

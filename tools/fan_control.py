@@ -31,3 +31,6 @@ class FanControlTool(Tool):
                 return f"Failed to turn {action} the fan. Status code: {response.status_code}"
         except requests.RequestException as e:
             return f"Error: {e}"
+if __name__ == "__main__":
+    tool = FanControlTool()
+    print(tool.forward("off"))   # Change "on" to "off" or invalid input to test other cases

@@ -1,21 +1,23 @@
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
-from audio2text import transcribe_audio
 from agent import AgentManager  
 from text2audio import speak_text
 from tools.light_control import LightControlTool
 from tools.fan_control import FanControlTool
 from tools.thermostat_control import ThermostatControlTool
 import toml
+import noisereduce as nr
+
+
 
 config = toml.load('config.toml')
 
 DEEPSEEK_API = config['secret']['deepseek_api']
 AUDIO_FILE = "user_input.wav"
 SAMPLERATE = 44100
-SILENCE_THRESHOLD = 0.35  # Adjust this value as needed
-SILENCE_DURATION = 2.0    # Duration of silence in seconds to stop recording
+SILENCE_THRESHOLD = 2.5  # Adjust this value as needed
+SILENCE_DURATION = 2.5    # Duration of silence in seconds to stop recording
 
 
 def record_audio(samplerate=SAMPLERATE):
@@ -28,8 +30,12 @@ def record_audio(samplerate=SAMPLERATE):
     try:
         with sd.InputStream(samplerate=samplerate, channels=1) as stream:
             while True:
+                avg_vol = []
                 audio_chunk, _ = stream.read(chunk_size)
                 volume = np.linalg.norm(audio_chunk)
+                avg_vol.append(volume)
+                mean = sum(avg_vol[-3:]) / len(avg_vol[-3:])
+                # SILENCE_THRESHOLD = mean
                 recording.append(audio_chunk)
                 print(f"[DEBUG] Volume: {volume:.4f}")
                 if volume < SILENCE_THRESHOLD:
@@ -40,9 +46,11 @@ def record_audio(samplerate=SAMPLERATE):
                 if silence_counter > SILENCE_DURATION:
                     print("🛑 Silence detected. Stopping recording.")
                     break
-
+        # Reduce noise before saving
+           
         audio_data = np.concatenate(recording, axis=0)
-        sf.write(AUDIO_FILE, audio_data, samplerate)
+        reduced_noise = nr.reduce_noise(y=audio_data.flatten(), sr=samplerate)
+        sf.write(AUDIO_FILE, reduced_noise, samplerate) 
         print("✅ Recording complete.")
 
     except Exception as e:
@@ -57,7 +65,7 @@ def main():
         api_key=DEEPSEEK_API,
         tools=[FanControlTool(),ThermostatControlTool(),LightControlTool()]
     )
-    
+    from audio2text import transcribe_audio
     record_audio()
     user_text = transcribe_audio(AUDIO_FILE)
     print(f"📝 You said: {user_text}")
